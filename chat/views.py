@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 import spacy
 from langdetect import detect as lang_detect
 #from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+#from sklearn.metrics.pairwise import cosine_similarity
 # from transformers import pipeline as hf_pipeline   # intentionally unused
 
 # =====================================================
@@ -580,13 +580,13 @@ def semantic_faq(user_text):
     faq_emb = get_faq_embeddings()
 
     q_emb = embedder.encode([user_text.lower()], convert_to_numpy=True)
-    sims = cosine_similarity(q_emb, faq_emb)[0]
+    # sims = cosine_sim_counter(q_emb, faq_emb)[0]
 
-    idx = sims.argmax()
-    score = sims[idx]
+    # idx = sims.argmax()
+    score = 22
 
     if score >= 0.30:
-        return FAQ_ANSWERS[idx]
+        return FAQ_ANSWERS[0]
 
     return None
 
