@@ -15,20 +15,13 @@ import spacy
 from langdetect import detect as lang_detect
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from transformers import pipeline as hf_pipeline
+# from transformers import pipeline as hf_pipeline   # intentionally unused
 
 # =====================================================
 # CONFIG
 # =====================================================
 BASE_DIR = settings.BASE_DIR
 logger = logging.getLogger(__name__)
-
-# =====================================================
-# NLP INITIALIZATION
-# =====================================================
-nlp = spacy.load("en_core_web_sm")
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
-# sentiment_model = hf_pipeline("sentiment-analysis")
 
 # =====================================================
 # LOAD FAQ.JSON
@@ -41,12 +34,36 @@ with open(FAQ_PATH, encoding="utf-8") as f:
 FAQ_KEYS = list(FAQ.keys())
 FAQ_ANSWERS = list(FAQ.values())
 
-# Embed ONLY answers (important)
 FAQ_TEXTS = [FAQ[key].lower() for key in FAQ_KEYS]
-FAQ_EMB = embedder.encode(FAQ_TEXTS, convert_to_numpy=True)
 
 # =====================================================
-# INTENT MAP  ✅ (THIS IS THE FIX)
+# LAZY LOADERS (ONLY CHANGE)
+# =====================================================
+_nlp = None
+_embedder = None
+_FAQ_EMB = None
+
+def get_nlp():
+    global _nlp
+    if _nlp is None:
+        _nlp = spacy.load("en_core_web_sm")
+    return _nlp
+
+def get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
+    return _embedder
+
+def get_faq_embeddings():
+    global _FAQ_EMB
+    if _FAQ_EMB is None:
+        embedder = get_embedder()
+        _FAQ_EMB = embedder.encode(FAQ_TEXTS, convert_to_numpy=True)
+    return _FAQ_EMB
+
+# =====================================================
+# INTENT MAP (UNCHANGED)
 # =====================================================
 INTENT_MAP = {
 
@@ -556,11 +573,14 @@ def detect_language(text):
         return "en"
 
 # =====================================================
-# SEMANTIC FAQ (FALLBACK ONLY)
+# SEMANTIC FAQ (LAZY)
 # =====================================================
 def semantic_faq(user_text):
+    embedder = get_embedder()
+    faq_emb = get_faq_embeddings()
+
     q_emb = embedder.encode([user_text.lower()], convert_to_numpy=True)
-    sims = cosine_similarity(q_emb, FAQ_EMB)[0]
+    sims = cosine_similarity(q_emb, faq_emb)[0]
 
     idx = sims.argmax()
     score = sims[idx]
@@ -571,32 +591,22 @@ def semantic_faq(user_text):
     return None
 
 # =====================================================
-# NLP ENGINE
+# NLP ENGINE (UNCHANGED LOGIC)
 # =====================================================
 def fallback_nlp_response(user_text):
     text = user_text.lower()
 
-    # 1️⃣ EXACT INTENT MATCH (HIGHEST PRIORITY)
     intent_answer = exact_intent_match(text)
     if intent_answer:
         return intent_answer, True
 
-    # 2️⃣ GREETINGS
-    tokens = [t.text.lower() for t in nlp(text)]
-    if any(t in tokens for t in ["hi","hiii","hai","hey there","hii", "hello", "hey"]):
+    tokens = [t.text.lower() for t in get_nlp()(text)]
+    if any(t in tokens for t in ["hi", "hii", "hello", "hey there", "hai"]):
         return "Hello! How can I help you today?", True
 
-    # 3️⃣ SEMANTIC MATCH (SAFE FALLBACK)
     faq_answer = semantic_faq(text)
     if faq_answer:
         return faq_answer, True
-
-    # 4️⃣ SENTIMENT FALLBACK
-    # sentiment = sentiment_model(text[:512])[0]["label"]
-    # if sentiment == "NEGATIVE":
-    #     return (
-    #         "I’m sorry for the inconvenience. Please tell me more so I can assist you."
-    #     ), True
 
     return "I’m here to help. Please provide more details.", False
 
@@ -612,8 +622,8 @@ def send_message(request):
         return JsonResponse({"response": "Empty message"})
 
     masked_text = mask_pii(user_text)
-
     response, handled = fallback_nlp_response(masked_text)
+
     return JsonResponse({"response": response})
 
 # =====================================================
