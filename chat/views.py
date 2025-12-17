@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 # ================= NLP / AI =================
 import spacy
 from langdetect import detect as lang_detect
-from sentence_transformers import SentenceTransformer
+#from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 # from transformers import pipeline as hf_pipeline   # intentionally unused
 
@@ -51,8 +51,8 @@ def get_nlp():
 
 def get_embedder():
     global _embedder
-    if _embedder is None:
-        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
+    # if _embedder is None:
+    #     _embedder = SentenceTransformer("all-MiniLM-L6-v2")
     return _embedder
 
 def get_faq_embeddings():
