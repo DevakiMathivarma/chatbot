@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # =====================================================
 nlp = spacy.load("en_core_web_sm")
 embedder = SentenceTransformer("all-MiniLM-L6-v2")
-sentiment_model = hf_pipeline("sentiment-analysis")
+# sentiment_model = hf_pipeline("sentiment-analysis")
 
 # =====================================================
 # LOAD FAQ.JSON
@@ -592,11 +592,11 @@ def fallback_nlp_response(user_text):
         return faq_answer, True
 
     # 4️⃣ SENTIMENT FALLBACK
-    sentiment = sentiment_model(text[:512])[0]["label"]
-    if sentiment == "NEGATIVE":
-        return (
-            "I’m sorry for the inconvenience. Please tell me more so I can assist you."
-        ), True
+    # sentiment = sentiment_model(text[:512])[0]["label"]
+    # if sentiment == "NEGATIVE":
+    #     return (
+    #         "I’m sorry for the inconvenience. Please tell me more so I can assist you."
+    #     ), True
 
     return "I’m here to help. Please provide more details.", False
 
