@@ -10,18 +10,46 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
-# ================= NLP / AI =================
-import spacy
 from langdetect import detect as lang_detect
-#from sentence_transformers import SentenceTransformer
-#from sklearn.metrics.pairwise import cosine_similarity
-# from transformers import pipeline as hf_pipeline   # intentionally unused
+from sklearn.metrics.pairwise import cosine_similarity
 
 # =====================================================
 # CONFIG
 # =====================================================
 BASE_DIR = settings.BASE_DIR
 logger = logging.getLogger(__name__)
+
+# =====================================================
+# LAZY MODEL LOADERS (MEMORY SAFE)
+# =====================================================
+_nlp = None
+_embedder = None
+_FAQ_EMB = None
+
+
+def get_nlp():
+    """Load spaCy only when required"""
+    global _nlp
+    if _nlp is None:
+        import spacy
+        _nlp = spacy.load(
+            "en_core_web_sm",
+            disable=["ner", "parser", "lemmatizer"]
+        )
+    return _nlp
+
+
+def get_embedder():
+    """Load SentenceTransformer only when required"""
+    global _embedder
+    if _embedder is None:
+        from sentence_transformers import SentenceTransformer
+        _embedder = SentenceTransformer(
+            "all-MiniLM-L6-v2",
+            device="cpu"
+        )
+    return _embedder
+
 
 # =====================================================
 # LOAD FAQ.JSON
@@ -33,34 +61,21 @@ with open(FAQ_PATH, encoding="utf-8") as f:
 
 FAQ_KEYS = list(FAQ.keys())
 FAQ_ANSWERS = list(FAQ.values())
-
 FAQ_TEXTS = [FAQ[key].lower() for key in FAQ_KEYS]
 
-# =====================================================
-# LAZY LOADERS (ONLY CHANGE)
-# =====================================================
-_nlp = None
-_embedder = None
-_FAQ_EMB = None
-
-def get_nlp():
-    global _nlp
-    if _nlp is None:
-        _nlp = spacy.load("en_core_web_sm")
-    return _nlp
-
-def get_embedder():
-    global _embedder
-    # if _embedder is None:
-    #     _embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    return _embedder
 
 def get_faq_embeddings():
+    """Compute FAQ embeddings once and cache"""
     global _FAQ_EMB
     if _FAQ_EMB is None:
         embedder = get_embedder()
-        _FAQ_EMB = embedder.encode(FAQ_TEXTS, convert_to_numpy=True)
+        _FAQ_EMB = embedder.encode(
+            FAQ_TEXTS,
+            convert_to_numpy=True,
+            show_progress_bar=False
+        )
     return _FAQ_EMB
+
 
 # =====================================================
 # INTENT MAP (UNCHANGED)
@@ -540,9 +555,8 @@ INTENT_MAP = {
   "false normal blood test"
 ]
 
-
-
 }
+
 
 def exact_intent_match(user_text):
     text = user_text.lower()
@@ -552,16 +566,19 @@ def exact_intent_match(user_text):
                 return FAQ.get(intent)
     return None
 
+
 # =====================================================
 # PII MASKING
 # =====================================================
 EMAIL_RE = re.compile(r"\S+@\S+")
 PHONE_RE = re.compile(r"\b\d{10,12}\b")
 
+
 def mask_pii(text):
     text = EMAIL_RE.sub("[EMAIL]", text)
     text = PHONE_RE.sub("[PHONE]", text)
     return text
+
 
 # =====================================================
 # LANGUAGE DETECTION
@@ -572,43 +589,62 @@ def detect_language(text):
     except:
         return "en"
 
+
 # =====================================================
-# SEMANTIC FAQ (LAZY)
+# GREETING CHECK (spaCy SAFE)
+# =====================================================
+def is_greeting(text):
+    nlp = get_nlp()
+    tokens = {t.text.lower() for t in nlp(text)}
+    return bool(tokens & {"hi", "hii", "hello", "hey", "hai"})
+
+
+# =====================================================
+# SEMANTIC FAQ (SAFE FALLBACK)
 # =====================================================
 def semantic_faq(user_text):
-    embedder = get_embedder()
-    faq_emb = get_faq_embeddings()
+    try:
+        embedder = get_embedder()
+        faq_emb = get_faq_embeddings()
 
-    q_emb = embedder.encode([user_text.lower()], convert_to_numpy=True)
-    # sims = cosine_sim_counter(q_emb, faq_emb)[0]
+        q_emb = embedder.encode(
+            [user_text.lower()],
+            convert_to_numpy=True
+        )
 
-    # idx = sims.argmax()
-    score = 22
+        sims = cosine_similarity(q_emb, faq_emb)[0]
+        idx = sims.argmax()
 
-    if score >= 0.30:
-        return FAQ_ANSWERS[0]
+        if sims[idx] >= 0.30:
+            return FAQ_ANSWERS[idx]
+    except Exception as e:
+        logger.warning(f"Semantic FAQ error: {e}")
 
     return None
 
+
 # =====================================================
-# NLP ENGINE (UNCHANGED LOGIC)
+# NLP ENGINE (PRIORITY ORDER)
 # =====================================================
 def fallback_nlp_response(user_text):
     text = user_text.lower()
 
+    # 1️⃣ EXACT INTENT (FASTEST)
     intent_answer = exact_intent_match(text)
     if intent_answer:
         return intent_answer, True
 
-    tokens = [t.text.lower() for t in get_nlp()(text)]
-    if any(t in tokens for t in ["hi", "hii", "hello", "hey there", "hai"]):
+    # 2️⃣ GREETING
+    if is_greeting(text):
         return "Hello! How can I help you today?", True
 
+    # 3️⃣ SEMANTIC MATCH (ONLY IF NEEDED)
     faq_answer = semantic_faq(text)
     if faq_answer:
         return faq_answer, True
 
     return "I’m here to help. Please provide more details.", False
+
 
 # =====================================================
 # CHAT ENDPOINT
@@ -622,9 +658,10 @@ def send_message(request):
         return JsonResponse({"response": "Empty message"})
 
     masked_text = mask_pii(user_text)
-    response, handled = fallback_nlp_response(masked_text)
+    response, _ = fallback_nlp_response(masked_text)
 
     return JsonResponse({"response": response})
+
 
 # =====================================================
 # AUTH VIEWS (UNCHANGED)
@@ -642,6 +679,7 @@ def login_page(request):
         return render(request, "chat/login.html", {"error": "Invalid credentials"})
     return render(request, "chat/login.html")
 
+
 def register_page(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -656,10 +694,12 @@ def register_page(request):
 
     return render(request, "chat/register.html")
 
+
 def chat_page(request):
     if not request.user.is_authenticated:
         return redirect("login")
     return render(request, "chat/chat_page.html")
+
 
 def logout_view(request):
     logout(request)
