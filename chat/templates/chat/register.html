@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - SmartAssist AI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{% static 'chat/login.css' %}">
+</head>
+<body>
+  <div class="login-page">
+    <div class="card" role="region" aria-labelledby="regTitle">
+      <h2 id="regTitle"><span class="logo-dot" aria-hidden="true"></span> SmartAssist AI Register</h2>
+
+      {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+      {% endif %}
+
+      <form id="registerForm" method="post" novalidate>
+        {% csrf_token %}
+        <label class="sr-only" for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required>
+
+        <div style="position:relative;">
+          <label class="sr-only" for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="Password" autocomplete="new-password" required>
+          <button type="button" class="pw-toggle" aria-label="Show password" data-target="password">👁️</button>
+        </div>
+
+        <div style="position:relative;">
+          <label class="sr-only" for="confirm_password">Confirm Password</label>
+          <input id="confirm_password" name="confirm_password" type="password" placeholder="Confirm Password" autocomplete="new-password" required>
+          <button type="button" class="pw-toggle" aria-label="Show confirm password" data-target="confirm_password">👁️</button>
+        </div>
+
+        <button id="submitBtn" type="submit"><span class="label">Register</span></button>
+      </form>
+
+      <p class="small">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+    </div>
+  </div>
+
+  <script>
+  // Progressive JS: try AJAX to show success animation; fallback to normal submit if anything fails.
+  (function(){
+    const form = document.getElementById('registerForm');
+    const btn = document.getElementById('submitBtn');
+    const pwToggles = document.querySelectorAll('.pw-toggle');
+
+    // Password visibility toggles
+    pwToggles.forEach(t => {
+      t.addEventListener('click', () => {
+        const targetId = t.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          t.innerText = '🙈';
+          t.setAttribute('aria-label', 'Hide password');
+        } else {
+          input.type = 'password';
+          t.innerText = '👁️';
+          t.setAttribute('aria-label', 'Show password');
+        }
+      });
+    });
+
+    // Helper: show client-side error
+    function showError(text) {
+      // remove old
+      const old = document.querySelector('.error');
+      if (old) old.remove();
+      const p = document.createElement('p');
+      p.className = 'error';
+      p.setAttribute('role', 'alert');
+      p.innerText = text;
+      const card = document.querySelector('.card');
+      card.insertBefore(p, card.querySelector('form'));
+    }
+
+    // AJAX submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // basic client validation
+      const pw = document.getElementById('password').value.trim();
+      const cpw = document.getElementById('confirm_password').value.trim();
+      if (pw !== cpw) {
+        showError('Passwords do not match');
+        return;
+      }
+
+      // prepare form data
+      const formData = new FormData(form);
+
+      // Visual: disable button while processing
+      btn.disabled = true;
+      btn.style.cursor = 'progress';
+
+      try {
+        // send POST (fetch will follow redirects by default)
+        const resp = await fetch(window.location.href, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: formData,
+          credentials: 'same-origin'
+        });
+
+        // if the server redirected (Django redirect to login on success), fetch follows and resp.redirected will be true
+        if (resp.redirected) {
+          // show success micro-animation then go to login page
+          btn.classList.add('success');
+          setTimeout(() => { window.location.href = resp.url; }, 900);
+          return;
+        }
+
+        // attempt to parse JSON (if view returns JSON on AJAX error)
+        const ct = resp.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          const data = await resp.json();
+          if (data && data.error) {
+            showError(data.error);
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            return;
+          }
+        } else {
+          // Not redirected and not JSON -> likely HTML (rendered page with errors). We'll try to extract .error text.
+          const text = await resp.text();
+          // quick parse for .error content (best-effort)
+          const m = text.match(/<p class="error"[^>]*>(.*?)<\/p>/i);
+          if (m && m[1]) {
+            const message = m[1].replace(/<[^>]*>/g, '').trim();
+            showError(message);
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            return;
+          }
+        }
+
+        // Fallback: if nothing obvious, reload to let server handle (normal form submit)
+        form.submit();
+
+      } catch (err) {
+        // network or other error → fallback to normal submit
+        console.error(err);
+        form.submit();
+      }
+    });
+
+  })();
+  </script>
+
+  <style>
+  /* tiny helper for screen-reader-only labels */
+  .sr-only { position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+  /* position pw-toggle */
+  .pw-toggle{
+    position:absolute; right:8px; top:8px; border:none; background:transparent; color:var(--muted); font-size:16px;
+    cursor:pointer; padding:6px; border-radius:8px;
+  }
+  .pw-toggle:hover{ transform:translateY(-2px); }
+  /* ensure input container has space for button */
+  div[style*="position:relative;"]{ display:block; }
+  </style>
+</body>
+</html>

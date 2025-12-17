@@ -1,0 +1,1121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SmartAssist AI Chat</title>
+  <link rel="stylesheet" href="{% static 'chat/style.css' %}" />
+  <!-- Small supplemental CSS to fix sidebar scrolling, title alignment and accordion visuals.
+       This does NOT replace your style.css -- it only augments it. -->
+  <style>
+    /* ensure sidebar scrolls independently and title aligns */
+    .sidebar {
+      background: linear-gradient(180deg,
+          #383d48 0%,
+          #8f939e 100%);
+      border-radius: 22px;
+      width: 400px;
+      padding: 22px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* earlier HTML used .sidebar-title so style it */
+    .sidebar-title {
+      margin: 0 0 16px 0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.4px;
+    }
+
+    /* Modes row (tabs) */
+    .modes-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .mode-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+      color: #dbeafe;
+      font-weight: 700;
+    }
+
+    .mode-item.active-mode {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.06));
+      border-left: 4px solid #3b82f6;
+      color: #dbeafe;
+    }
+
+    /* accordion tweaks */
+    .accordion {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .acc-header {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      color: #e6eef9;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+
+    .acc-body {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 6px;
+    }
+
+    .acc-body.open {
+      display: flex;
+    }
+
+    .acc-body .topic {
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: left;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+      color: #cfe0ff;
+      border: none;
+    }
+
+    .acc-body .topic:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* keep layout flexible */
+    .center-shell {
+      align-items: stretch;
+    }
+
+    /* small helper for disabled send */
+    .send-btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* small style for meta block inside bubbles (keeps with your class structure) */
+    .bubble-meta {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 6px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .meta-pill {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      color: #eaf2ff;
+    }
+
+    .meta-entities {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .meta-doc {
+      font-size: 12px;
+      color: #dbeafe;
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .pii-show-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #dbeafe;
+    }
+
+    .source-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+    }
+
+    .source-faq {
+      background: rgba(34, 197, 94, 0.12);
+      color: #a7f3d0;
+      border-left: 3px solid #10b981;
+    }
+
+    .source-ai {
+      background: rgba(59, 130, 246, 0.08);
+      color: #bfdbfe;
+      border-left: 3px solid #3b82f6;
+    }
+
+    .attachment-link {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: #bfe0ff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <button id="open-chat-btn" class="chat-fab">
+    💬 Chat
+  </button>
+
+
+  <div id="chat-popup" class="chat-popup hidden">
+    <div class="chat-popup-inner">
+
+      <!-- Close button -->
+      <button id="close-chat-btn" class="close-chat">✕</button>
+      <button class="theme-toggle" title="Toggle theme" style="display: none;">View</button>
+
+
+
+      <div class="page-bg">
+        <div class="center-shell">
+          <aside class="sidebar" style="display: none;">
+
+            <h1 class="sidebar-title">SmartAssist AI</h1>
+
+       
+            <div class="modes-row" role="tablist" aria-label="Chat modes">
+              <button class="mode-item active-mode" data-mode="support" role="tab">Health Support</button>
+              <button class="mode-item" data-mode="general" role="tab">Ask Anything</button>
+            </div>
+
+         
+            <div id="sidebar-accordion" class="accordion" aria-live="polite"></div>
+
+            <div class="sidebar-footer">
+              <a href="{% url 'chat:logout' %}" class="logout-btn">Logout</a>
+            </div>
+          </aside>
+
+          <main class="chat-panel">
+            <header class="chat-header">
+              <div class="bot-status">
+                <img src="{% static 'chat/bot_avatar.gif' %}" alt="bot" class="bot-avatar"
+                  onerror="this.style.display='none'" />
+                <div class="bot-meta">
+                  <div class="title">SmartAssist AI</div>
+                  <div class="status">Online • <span id="typing-indicator-small">Ready</span></div>
+                </div>
+              </div>
+              <div class="header-actions">
+                <button id="clear-chat" class="ghost-btn">Clear</button>
+              </div>
+            </header>
+
+            <!-- messages area -->
+            <section id="messages" class="messages" aria-live="polite" role="log" data-last-date="">
+              <div class="intro-msg">
+                <div class="welcome-bubble">Hello! I am SmartAssist AI. How can I help you today?</div>
+              </div>
+            </section>
+
+            <!-- composer (sticky inside chat-panel) -->
+            <footer class="composer">
+              <div class="left-controls">
+                <label class="file-btn" title="Attach image or audio">
+                  <input id="file-input" style="display: none;" type="file" accept="image/*,audio/*" />
+                  <img src="{% static 'chat/images/fileicon1.gif' %}" alt="attach" />
+                </label>
+
+                <button id="mic-btn" class="mic-btn" title="Record voice">
+                  <img src="{% static 'chat/images/microphone.gif' %}" alt="mic" />
+                </button>
+              </div>
+
+              <div class="input-wrap">
+                <input id="user-input" type="text" placeholder="Ask anything..." autocomplete="off" />
+                <div id="preview-area" class="preview-area" aria-hidden="true"></div>
+              </div>
+
+              <div class="right-controls">
+                <button id="send-btn" class="send-btn">Send</button>
+              </div>
+            </footer>
+          </main>
+        </div>
+      </div>
+
+      </div>
+      </div>
+
+      <!-- template for message bubble -->
+      <template id="bubble-tpl">
+        <div class="message">
+          <div class="avatar"></div>
+          <div class="bubble">
+            <div class="bubble-inner"></div>
+            <div class="bubble-meta"></div>
+          </div>
+        </div>
+      </template>
+
+      <script>
+        /***********************
+         * FAQ JSON (your exact content)
+         * I used your JSON verbatim here and convert into KB below.
+         ***********************/
+        // const FAQ = {
+        //   "account_security": {
+        //     "change_password": "Go to Account → Change Password to update your password.",
+        //     "reset_password": "Go to Settings → Account → Reset Password.",
+        //     "two_factor_issues": "Go to Security → Two-Factor → Reset and follow on-screen steps.",
+        //     "account_locked": "Your account is locked for security reasons. Contact support to unlock.",
+        //     "suspicious_activity": "If you noticed unusual activity, please reset password immediately."
+        //   },
+
+        //   "profile_management": {
+        //     "update_profile": "Go to Profile → Edit Info to update your information.",
+        //     "change_email": "Go to Account → Edit Email → Verify new email.",
+        //     "change_phone": "Go to Account → Edit Phone Number.",
+        //     "delete_my_account": "Contact support to permanently delete your account.",
+        //     "profile_picture": "Go to Profile → Edit → Upload Picture."
+        //   },
+
+        //   "orders_delivery": {
+        //     "track_order": "Go to Orders → Track Order to see your shipment status.",
+        //     "cancel_order": "Orders can be cancelled within 24 hours of placement.",
+        //     "delivery_delay": "Your order may be delayed due to logistics issues.",
+        //     "wrong_item": "If you received the wrong item, open a support ticket immediately.",
+        //     "missing_item": "If an item is missing, contact support with order details."
+        //   },
+
+        //   "refunds_returns": {
+        //     "refund_policy": "Refunds are processed within 3–5 business days.",
+        //     "refund_rejected": "Refund may be rejected due to item condition or policy violation.",
+        //     "return_pickup": "Return pickups are scheduled within 48 hours.",
+        //     "track_refund": "Refund status is available in Orders → Refunds.",
+        //     "exchange_item": "Exchanges are available for select items only."
+        //   },
+
+        //   "payments_billing": {
+        //     "payment_failed": "Please check your card details or try again later.",
+        //     "double_charge": "If double charged, refund will be auto-processed in 3–5 days.",
+        //     "update_payment_method": "Go to Payment Settings to update your payment method.",
+        //     "invoice_request": "Invoices are available in Orders → Invoice.",
+        //     "accepted_payment_methods": "We accept Debit/Credit cards, UPI, Wallets, and PayPal."
+        //   },
+
+        //   "subscriptions": {
+        //     "plan_details": "Visit Account → Subscription for plan details.",
+        //     "upgrade_plan": "Click Upgrade on your Subscription page.",
+        //     "cancel_subscription": "Go to Subscription → Cancel Plan.",
+        //     "auto_renew": "Auto-renew can be disabled in Subscription settings.",
+        //     "trial_rules": "Trial periods last 7 days unless otherwise stated."
+        //   },
+
+        //   "technical_support": {
+        //     "app_crashing": "Restart the app. If problem persists, reinstall.",
+        //     "app_slow": "Clear app cache and try again.",
+        //     "notification_issues": "Enable notifications in Settings → Notifications.",
+        //     "mic_not_working": "Grant microphone access in browser or device settings.",
+        //     "website_not_loading": "Clear cache or try again on different browser."
+        //   },
+
+        //   "wallet_rewards": {
+        //     "reward_points": "Check Rewards → Points.",
+        //     "redeem_points": "Redeem points during checkout.",
+        //     "cashback_delay": "Cashback will reflect in 24 hours.",
+        //     "wallet_transfer": "Wallet balance cannot be transferred to bank.",
+        //     "points_expired": "Points expire after 12 months."
+        //   },
+
+        //   "shipping_info": {
+        //     "international_shipping": "Yes, we ship worldwide.",
+        //     "shipping_time": "Standard shipping takes 3–5 business days.",
+        //     "customs_fees": "International orders may include customs charges.",
+        //     "weekend_delivery": "Weekend delivery available in select cities.",
+        //     "change_shipping_speed": "You can modify shipping speed before dispatch."
+        //   },
+
+        //   "developer_api": {
+        //     "api_rate_limit": "Rate limit reached. Try again after cooldown.",
+        //     "webhook_issue": "Ensure your webhook endpoint returns HTTP 200.",
+        //     "sandbox_vs_live": "Use sandbox keys for testing and live keys for production.",
+        //     "api_key_generation": "Generate keys under Developer → API Keys.",
+        //     "kyc_rejected": "KYC may be rejected due to unclear documents or mismatch."
+        //   }
+        // };
+
+
+        const FAQ = {
+
+          /* =========================
+             LAB VISIT & TIMINGS
+          ========================== */
+          "lab_information": {
+            "lab_opening_time": "Most diagnostic labs open between 6:00 AM and 8:00 AM. Timings may vary by location.",
+            "lab_closing_time": "Labs usually close between 6:00 PM and 9:00 PM depending on the branch.",
+            "appointment_needed_for_test": "Booking an appointment helps reduce waiting time, but walk-ins are also accepted at most labs.",
+            "walk_in_test_available": "Yes, most labs allow walk-in blood tests without prior appointment.",
+            "lab_waiting_duration": "Average waiting time at labs ranges from 10 to 30 minutes depending on crowd and test type."
+          },
+
+          /* =========================
+             FASTING & PREPARATION
+          ========================== */
+          "test_preparation": {
+            "blood_test_fasting_time": "For fasting blood tests, fasting for 8–12 hours is recommended. Plain water is allowed.",
+            "water_during_fasting": "Yes, drinking plain water during fasting is allowed unless advised otherwise.",
+            "coffee_before_blood_test": "Coffee, tea, milk, or sugary drinks should be avoided before fasting blood tests.",
+            "medicine_before_blood_test": "Continue regular medicines unless your doctor specifically asks you to stop them.",
+            "exercise_before_blood_test": "Heavy exercise before a blood test is not recommended as it may affect results.",
+            "alcohol_before_blood_test": "Alcohol should be avoided before blood tests as it can alter test values.",
+            "smoking_before_test": "Smoking before a blood test can affect certain lab readings and should be avoided."
+          },
+
+          /* =========================
+             BLOOD COLLECTION PROCESS
+          ========================== */
+          "blood_collection": {
+            "blood_sample_collection_time": "Blood sample collection usually takes about 5–10 minutes.",
+            "blood_amount_taken": "Only a small amount of blood is collected, usually a few milliliters.",
+            "blood_collection_pain": "Blood collection causes minimal pain, similar to a small needle prick.",
+            "blood_sample_safety": "Blood collection is safe and performed using sterile, single-use equipment.",
+            "infection_risk_blood_test": "There is no infection risk when sterile, disposable equipment is used.",
+            "minor_bleeding_after_test": "Minor bleeding after blood collection is normal and stops within minutes.",
+            "bruise_after_blood_test": "Mild bruising may occur and usually resolves on its own."
+          },
+
+          /* =========================
+             AFTER TEST CARE
+          ========================== */
+          "after_test_care": {
+            "weakness_after_blood_test": "Feeling slightly weak after a blood test is common and improves with rest.",
+            "dizziness_after_blood_test": "Some people may feel dizzy after blood collection. Sitting and resting helps.",
+            "post_test_food": "You can eat normally after a blood test unless advised otherwise.",
+            "driving_after_blood_test": "Most people can safely drive after a blood test if they feel normal.",
+            "arm_pain_after_test": "Mild arm pain after blood collection is normal and usually resolves within a day."
+          },
+
+          /* =========================
+             REPORTS & RESULTS
+          ========================== */
+          "reports_results": {
+            "blood_report_availability": "Blood test reports are usually ready within 24 hours.",
+            "blood_report_delay_reason": "Reports may be delayed due to complex testing or quality checks.",
+            "blood_report_download_process": "Reports can be downloaded from the app or website once available.",
+            "report_ready_notification": "You will receive a notification when your report is ready.",
+            "partial_report_release": "Some reports may be released in parts if different tests take different times.",
+            "printed_report_copy": "Printed copies of reports can be collected from the lab if required."
+          },
+
+
+
+
+
+
+
+        };
+
+        // -----------------------------
+        // helper: make a readable title from snake_case key
+        // -----------------------------
+        function makeReadable(snake) {
+          if (!snake) return '';
+          return snake.replace(/_/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        // -----------------------------
+        // build KB from FAQ (keeps sidebar layout unchanged)
+        // -----------------------------
+        function buildKBFromFAQ(faq) {
+          // support: include each top-level FAQ section as its own sidebar section
+          const support = {};
+          for (const [sectionKey, topics] of Object.entries(faq)) {
+            const sectionTitle = makeReadable(sectionKey); // e.g., "Account Security"
+            support[sectionTitle] = {};
+            for (const [topicKey, answerText] of Object.entries(topics)) {
+              const topicLabel = makeReadable(topicKey); // e.g., "Change Password"
+              support[sectionTitle][topicLabel] = answerText;
+            }
+          }
+
+          // general: create a curated grouping for the "Ask Anything" tab (non-destructive)
+          const general = {
+            "Shipping & Delivery": {},
+            "Payments & Billing": {},
+            "Developer & API": {}
+          };
+
+          // copy selected sections into general if present
+          if (faq.shipping_info) {
+            for (const [k, v] of Object.entries(faq.shipping_info)) {
+              general["Shipping & Delivery"][makeReadable(k)] = v;
+            }
+          }
+          if (faq.payments_billing) {
+            for (const [k, v] of Object.entries(faq.payments_billing)) {
+              general["Payments & Billing"][makeReadable(k)] = v;
+            }
+          }
+          if (faq.developer_api) {
+            for (const [k, v] of Object.entries(faq.developer_api)) {
+              general["Developer & API"][makeReadable(k)] = v;
+            }
+          }
+
+          return { support, general };
+        }
+
+        // Build KB used by the existing rendering code
+        const KB = buildKBFromFAQ(FAQ);
+
+        // -----------------------------
+        // Helper utilities (CSRF + DOM)
+        // -----------------------------
+        function getCookie(name) {
+          const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+          return match ? match.pop() : '';
+        }
+        const SEND_URL = "{% url 'chat:send_message' %}";
+
+        // -----------------------------
+        // Sidebar rendering (from KB)
+        // -----------------------------
+        const accordionRoot = document.getElementById('sidebar-accordion');
+        function renderSidebar(mode = 'support') {
+          accordionRoot.innerHTML = '';
+          const data = KB[mode] || {};
+          for (const [sectionTitle, topics] of Object.entries(data)) {
+            const item = document.createElement('div');
+            item.className = 'acc-item';
+
+            const header = document.createElement('button');
+            header.className = 'acc-header';
+            header.type = 'button';
+            header.innerText = sectionTitle;
+
+            const body = document.createElement('div');
+            body.className = 'acc-body';
+
+            for (const [topicLabel, answerText] of Object.entries(topics)) {
+              const btn = document.createElement('button');
+              btn.className = 'topic';
+              btn.type = 'button';
+              btn.dataset.answer = answerText;
+              btn.innerText = topicLabel;
+              body.appendChild(btn);
+            }
+
+            header.addEventListener('click', () => {
+              body.classList.toggle('open');
+            });
+
+            item.appendChild(header);
+            item.appendChild(body);
+            accordionRoot.appendChild(item);
+          }
+        }
+
+        // -----------------------------
+        // UI helpers: create message bubble
+        // -----------------------------
+        function createBubble(text, who, opts = {}) {
+          const tpl = document.getElementById('bubble-tpl').content.cloneNode(true);
+          const wrapper = tpl.querySelector('.message');
+          wrapper.classList.add(who);
+          const avatar = wrapper.querySelector('.avatar');
+          const bubbleInner = wrapper.querySelector('.bubble-inner');
+
+          if (who === 'bot') {
+            avatar.style.backgroundImage = "url('{% static 'chat/images/chatbot.gif' %}')";
+          } else {
+            avatar.style.backgroundImage = "url('{% static 'chat/user_avatar.png' %}')";
+          }
+
+          if (opts.html) {
+            bubbleInner.innerHTML = opts.html;
+          } else {
+            bubbleInner.innerText = text;
+          }
+
+          if (opts.typing) {
+            bubbleInner.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+          }
+          return wrapper;
+        }
+
+        // -----------------------------
+        // Scrolling / composer padding helpers
+        // -----------------------------
+        const messagesEl = document.getElementById('messages');
+        function ensurePaddingForComposer() {
+          const composer = document.querySelector('.composer');
+          if (!composer || !messagesEl) return;
+          const composerHeight = composer.offsetHeight;
+          messagesEl.style.paddingBottom = (composerHeight + 24) + 'px';
+        }
+        window.addEventListener('load', ensurePaddingForComposer);
+        window.addEventListener('resize', ensurePaddingForComposer);
+
+        function smoothScrollToBottom(instant = false) {
+          if (!messagesEl) return;
+          if (instant) { messagesEl.scrollTop = messagesEl.scrollHeight; return; }
+          try { messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' }); }
+          catch (e) { messagesEl.scrollTop = messagesEl.scrollHeight; }
+        }
+
+        // -----------------------------
+        // Date separators & message ids
+        // -----------------------------
+        function _formatDateLabel(date) {
+          const now = new Date();
+          const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const diff = Math.round((today - d) / (24 * 3600 * 1000));
+          if (diff === 0) return "Today";
+          if (diff === 1) return "Yesterday";
+          return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+        function _maybeInsertDateSeparator(date) {
+          if (!messagesEl) return;
+          const last = messagesEl.dataset.lastDate;
+          const dayKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
+          if (last !== dayKey) {
+            const sep = document.createElement('div');
+            sep.className = 'date-separator';
+            const span = document.createElement('span');
+            span.innerText = _formatDateLabel(date);
+            sep.appendChild(span);
+            messagesEl.appendChild(sep);
+            messagesEl.dataset.lastDate = dayKey;
+          }
+        }
+        function _genMsgId(prefix = 'm') {
+          return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        }
+
+        // -----------------------------
+        // appendMessage (single place to add bubbles)
+        // -----------------------------
+        function appendMessage(text, who, opts = {}) {
+          const ts = new Date();
+          _maybeInsertDateSeparator(ts);
+
+          const node = createBubble(text, who, opts);
+          const wrapper = node;
+          const bubbleInner = wrapper.querySelector('.bubble-inner');
+
+          const msgId = _genMsgId(who === 'user' ? 'u' : 'b');
+          wrapper.dataset.msgid = msgId;
+          wrapper.dataset.ts = ts.toISOString();
+
+          // add small receipt for user messages
+          if (who === 'user') {
+            const r = document.createElement('div');
+            r.className = 'receipt';
+            r.innerText = 'Sent';
+            const rc = document.createElement('div');
+            rc.className = 'receipt-container';
+            rc.appendChild(r);
+            wrapper.appendChild(rc);
+            wrapper.dataset.receipt = 'sent';
+            messagesEl.dataset.lastUserMessageId = msgId;
+          }
+
+          // reaction via long-press / dblclick / right-click
+          bubbleInner.addEventListener('contextmenu', (e) => { e.preventDefault(); _createReactionBox(wrapper, bubbleInner); });
+          bubbleInner.addEventListener('dblclick', (e) => { _createReactionBox(wrapper, bubbleInner); });
+
+          node.style.opacity = 0;
+          messagesEl.appendChild(node);
+          requestAnimationFrame(() => {
+            node.style.transform = "translateY(0)";
+            node.style.opacity = 1;
+            ensurePaddingForComposer();
+            smoothScrollToBottom();
+          });
+
+          // helper methods to update receipts
+          wrapper.markDelivered = function () {
+            wrapper.dataset.receipt = 'delivered';
+            const rnode = wrapper.querySelector('.receipt'); if (rnode) rnode.innerText = 'Delivered';
+            return wrapper;
+          };
+          wrapper.markRead = function () {
+            wrapper.dataset.receipt = 'read';
+            const rnode = wrapper.querySelector('.receipt'); if (rnode) rnode.innerText = 'Read';
+            return wrapper;
+          };
+
+          return wrapper;
+        }
+
+        // Reaction box helper
+        const _REACTIONS = ['❤️', '👍', '😂', '😮', '😢'];
+        function _createReactionBox(messageNode, bubbleInner) {
+          const existing = messageNode.querySelector('.reaction-box');
+          if (existing) { existing.remove(); return; }
+          const box = document.createElement('div'); box.className = 'reaction-box';
+          _REACTIONS.forEach(emoji => {
+            const span = document.createElement('span'); span.innerText = emoji;
+            span.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              _toggleReaction(bubbleInner, emoji);
+              box.remove();
+            });
+            box.appendChild(span);
+          });
+          messageNode.appendChild(box);
+          setTimeout(() => {
+            const onDoc = (e) => { if (!box.contains(e.target)) box.remove(); document.removeEventListener('click', onDoc); };
+            document.addEventListener('click', onDoc);
+          }, 30);
+        }
+        function _toggleReaction(bubbleInner, emoji) {
+          let badge = bubbleInner.parentElement.querySelector('.reaction-badge');
+          if (badge) {
+            if (badge.dataset.emoji === emoji) { badge.remove(); return; }
+            badge.dataset.emoji = emoji; badge.innerText = emoji; return;
+          }
+          badge = document.createElement('div'); badge.className = 'reaction-badge';
+          badge.dataset.emoji = emoji; badge.innerText = emoji;
+          Object.assign(badge.style, { position: 'absolute', right: '-10px', bottom: '-22px', background: 'rgba(255,255,255,0.95)', borderRadius: '999px', padding: '4px 8px', boxShadow: '0 6px 14px rgba(0,0,0,0.15)', fontSize: '14px', cursor: 'pointer' });
+          badge.addEventListener('click', (e) => { e.stopPropagation(); badge.remove(); });
+          bubbleInner.parentElement.appendChild(badge);
+        }
+
+        // Receipt helpers
+        function markDeliveredForLastUser() {
+          const id = messagesEl.dataset.lastUserMessageId;
+          if (!id) return null;
+          return markDeliveredById(id);
+        }
+        function markDeliveredById(msgId) {
+          const node = messagesEl.querySelector(`[data-msgid="${msgId}"]`);
+          if (!node) return null;
+          if (typeof node.markDelivered === 'function') return node.markDelivered();
+          const r = node.querySelector('.receipt'); if (r) r.innerText = 'Delivered';
+          node.dataset.receipt = 'delivered';
+          return node;
+        }
+
+        // -----------------------------
+        // Typing helpers
+        // -----------------------------
+        function showTyping() {
+          const el = appendMessage('', 'bot', { typing: true });
+          el.classList.add('typing');
+          document.getElementById('typing-indicator-small').innerText = 'Typing…';
+          return el;
+        }
+        function removeTyping(el) {
+          if (!el) return;
+          el.classList.remove('typing');
+          const inner = el.querySelector('.bubble-inner');
+          if (inner) inner.innerHTML = '';
+          document.getElementById('typing-indicator-small').innerText = 'Online';
+        }
+
+        // -----------------------------
+        // File preview & mic (unchanged)
+        // -----------------------------
+        const fileInput = document.getElementById('file-input');
+        const previewArea = document.getElementById('preview-area');
+
+        fileInput.addEventListener('change', async (e) => {
+          previewArea.innerHTML = '';
+          const file = e.target.files[0];
+          if (!file) return;
+          const item = document.createElement('div'); item.className = 'preview-item';
+          const name = document.createElement('div'); name.className = 'preview-name'; name.innerText = file.name;
+          item.appendChild(name);
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img'); img.className = 'preview-img'; img.src = URL.createObjectURL(file); item.appendChild(img);
+          } else if (file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio'); audio.controls = true; audio.src = URL.createObjectURL(file); item.appendChild(audio);
+          }
+          previewArea.appendChild(item); previewArea.style.display = 'flex';
+        });
+        previewArea.addEventListener('click', (ev) => {
+          if (!ev.target.closest('.preview-item')) { previewArea.innerHTML = ''; fileInput.value = ''; }
+        });
+
+        let recorder = null, audioChunks = [], lastRecordedBlob = null;
+        const micBtn = document.getElementById('mic-btn');
+        micBtn.addEventListener('click', async () => {
+          if (recorder && recorder.state === 'recording') { recorder.stop(); micBtn.classList.remove('recording'); micBtn.title = 'Record voice'; return; }
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream);
+            audioChunks = [];
+            recorder.ondataavailable = (evt) => audioChunks.push(evt.data);
+            recorder.onstop = () => {
+              const blob = new Blob(audioChunks, { type: 'audio/webm' });
+              lastRecordedBlob = blob;
+              const url = URL.createObjectURL(blob);
+              previewArea.innerHTML = '';
+              const item = document.createElement('div'); item.className = 'preview-item';
+              const audio = document.createElement('audio'); audio.controls = true; audio.src = url; item.appendChild(audio);
+              previewArea.appendChild(item); previewArea.style.display = 'flex';
+            };
+            recorder.start(); micBtn.classList.add('recording'); micBtn.title = 'Stop recording';
+          } catch (err) {
+            console.error('Microphone error', err); alert('Microphone access denied or unsupported.');
+          }
+        });
+
+        // -----------------------------
+        // Single send function (prevents duplicate sends)
+        // -----------------------------
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        let sendInProgress = false;
+
+        // -----------------------------
+        // Helper: render meta under a bubble
+        // -----------------------------
+        function renderMetaForBubble(bubbleNode, meta) {
+          if (!meta) return;
+          const metaContainer = bubbleNode.querySelector('.bubble-meta');
+          metaContainer.innerHTML = ''; // clear
+
+          // Source badge
+          const source = meta.source || (meta.rag_docs && meta.rag_docs.length ? 'ai' : (meta.source || 'ai'));
+          const badge = document.createElement('span');
+          badge.className = 'meta-pill source-badge ' + (source === 'faq' ? 'source-faq' : 'source-ai');
+          badge.innerText = (source === 'faq') ? 'FAQ' : 'AI';
+          metaContainer.appendChild(badge);
+
+          // Intent
+          if (meta.intent) {
+            const ip = document.createElement('span');
+            ip.className = 'meta-pill';
+            ip.innerText = `${meta.intent} ${meta.intent_confidence ? `(${(meta.intent_confidence * 100).toFixed(0)}%)` : ''}`;
+            metaContainer.appendChild(ip);
+          }
+
+          // Sentiment
+          if (meta.sentiment) {
+            const s = document.createElement('span');
+            s.className = 'meta-pill';
+            s.innerText = `${meta.sentiment.label || 'sentiment'}${meta.sentiment.score ? ` ${(meta.sentiment.score * 100).toFixed(0)}%` : ''}`;
+            metaContainer.appendChild(s);
+          }
+
+          // Language
+          if (meta.language) {
+            const l = document.createElement('span');
+            l.className = 'meta-pill';
+            l.innerText = meta.language;
+            metaContainer.appendChild(l);
+          }
+
+          // Entities (if present)
+          if (meta.entities) {
+            const entWrap = document.createElement('div');
+            entWrap.className = 'meta-entities';
+            for (const [k, v] of Object.entries(meta.entities)) {
+              const e = document.createElement('span');
+              e.className = 'meta-pill';
+              e.innerText = `${k}: ${v}`;
+              entWrap.appendChild(e);
+            }
+            metaContainer.appendChild(entWrap);
+          }
+
+          // RAG docs
+          if (meta.rag_docs && meta.rag_docs.length) {
+            meta.rag_docs.forEach(d => {
+              const div = document.createElement('div');
+              div.className = 'meta-doc';
+              const title = d.title || 'doc';
+              div.innerHTML = `<strong>${title}</strong> • score: ${(d.score || 0).toFixed(3)}<div style="margin-top:6px; font-size:13px; color:#cfe9ff;">${(d.snippet || '').slice(0, 300)}</div>`;
+              metaContainer.appendChild(div);
+            });
+          }
+
+          // found_pii (show masked + reveal button)
+          if (meta.found_pii) {
+            const keys = Object.keys(meta.found_pii).filter(k => meta.found_pii[k] && meta.found_pii[k].length);
+            if (keys.length) {
+              keys.forEach(k => {
+                const values = meta.found_pii[k];
+                const pill = document.createElement('div');
+                pill.style.display = 'flex'; pill.style.gap = '8px'; pill.style.alignItems = 'center';
+                const lbl = document.createElement('span');
+                lbl.className = 'meta-pill';
+                lbl.innerText = `${k}: ${values.length} item(s)`;
+                pill.appendChild(lbl);
+                const btn = document.createElement('button');
+                btn.className = 'pii-show-btn';
+                btn.innerText = 'Show PII (consent)';
+                btn.addEventListener('click', () => {
+                  // reveal actual values in a simple list below
+                  const list = document.createElement('div');
+                  list.style.marginTop = '8px';
+                  list.style.fontSize = '13px';
+                  list.style.color = '#ffdcdc';
+                  list.innerHTML = values.map(v => `<div>${k.toUpperCase()}: ${v}</div>`).join('');
+                  if (!pill._revealed) {
+                    pill.appendChild(list);
+                    pill._revealed = true;
+                    btn.innerText = 'Hide PII';
+                  } else {
+                    list.remove();
+                    pill._revealed = false;
+                    btn.innerText = 'Show PII (consent)';
+                  }
+                  ensurePaddingForComposer();
+                  smoothScrollToBottom();
+                });
+                pill.appendChild(btn);
+                metaContainer.appendChild(pill);
+              });
+            }
+          }
+
+          // If there are any attachments in meta (array of urls), render them
+          if (meta.attachments && meta.attachments.length) {
+            meta.attachments.forEach(u => {
+              const a = document.createElement('a');
+              a.href = u;
+              a.target = '_blank';
+              a.className = 'attachment-link';
+              a.innerText = u.split('/').pop();
+              metaContainer.appendChild(a);
+            });
+          }
+        }
+
+        // -----------------------------
+        // appendMessageThatIncludesMeta (wrapper to append and then render meta)
+        // -----------------------------
+        function appendMessageWithMeta(text, who, meta = {}, opts = {}) {
+          const wrapper = appendMessage(text, who, opts);
+          // Render returned meta (if bot)
+          if (who === 'bot' && meta) {
+            // attach entities from meta if present
+            if (!meta.entities && meta.found_entities) meta.entities = meta.found_entities;
+            renderMetaForBubble(wrapper, meta);
+          }
+          return wrapper;
+        }
+
+        // -----------------------------
+        // File preview & mic logic preserved above
+        // -----------------------------
+
+        async function sendMessageFromUI(text, opts = {}) {
+          if (sendInProgress) return; // avoid double submits
+          sendInProgress = true;
+          sendBtn.disabled = true;
+
+          const raw = (typeof text === 'string' && text.length) ? text : userInput.value.trim();
+          if (!raw && !(fileInput.files && fileInput.files.length) && !lastRecordedBlob) {
+            sendInProgress = false; sendBtn.disabled = false; return;
+          }
+
+          // append user's message
+          if (raw) { appendMessage(raw, 'user'); if (!opts.dontClearInput) userInput.value = ''; }
+          else { appendMessage('[file]', 'user'); }
+
+          userInput.focus();
+          const typingEl = showTyping();
+          const csrf = getCookie('csrftoken');
+
+          // Build finalMessage using the mode
+          const activeModeEl = document.querySelector('.mode-item.active-mode');
+          const mode = activeModeEl ? activeModeEl.getAttribute('data-mode') : 'general';
+          let finalMessage = raw;
+          if (mode === 'support' && raw) {
+            finalMessage = "You are SmartAssist AI, a helpful customer support assistant. Answer politely and clearly.\nUser: " + raw;
+          } else if (mode === 'support' && !raw) {
+            finalMessage = "You are SmartAssist AI, a helpful customer support assistant. The user uploaded a file.";
+          }
+
+          try {
+            let res;
+            if ((fileInput && fileInput.files && fileInput.files.length > 0) || lastRecordedBlob) {
+              const form = new FormData();
+              form.append('message', finalMessage || '');
+              if (fileInput && fileInput.files && fileInput.files.length > 0) form.append('file', fileInput.files[0]);
+              if (lastRecordedBlob) form.append('file', new File([lastRecordedBlob], 'recording.webm', { type: lastRecordedBlob.type || 'audio/webm' }));
+              res = await fetch(SEND_URL, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRFToken': csrf },
+                body: form
+              });
+            } else {
+              res = await fetch(SEND_URL, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ message: finalMessage })
+              });
+            }
+
+            removeTyping(typingEl);
+
+            let data;
+            try { data = await res.json(); } catch (err) {
+              console.error('Invalid JSON', err);
+              showError('Sorry, something went wrong.');
+              sendInProgress = false; sendBtn.disabled = false; return;
+            }
+
+            // cleanup previews
+            previewArea.innerHTML = ''; if (fileInput) fileInput.value = ''; lastRecordedBlob = null;
+
+            // If response contains meta and response text, present both
+            if (data && data.response) {
+              // If backend returned meta, merge some expected fields for easier UI
+              const meta = data.meta || {};
+              // backend may include rag_docs entries without snippet; ensure snippet exists
+              if (meta.rag_docs && Array.isArray(meta.rag_docs)) {
+                meta.rag_docs = meta.rag_docs.map(d => ({ title: d.title || 'doc', score: d.score || 0, snippet: d.snippet || '' }));
+              }
+              // attachments may be included inside response text - detect URLs and add to meta.attachments
+              const urlRegex = /(https?:\/\/[^\s]+)/g;
+              const foundUrls = [];
+              let match;
+              while ((match = urlRegex.exec(data.response)) !== null) foundUrls.push(match[0]);
+              if (foundUrls.length) {
+                meta.attachments = meta.attachments || [];
+                foundUrls.forEach(u => { if (!meta.attachments.includes(u)) meta.attachments.push(u); });
+              }
+
+              appendMessageWithMeta(data.response, 'bot', meta);
+              // mark delivered for last user
+              markDeliveredForLastUser();
+            } else if (data && data.error) {
+              appendMessageWithMeta(data.error, 'bot', {});
+            } else {
+              appendMessageWithMeta('Sorry, something went wrong.', 'bot', {});
+            }
+          } catch (err) {
+            removeTyping(typingEl);
+            console.error(err);
+            showError('Network error. Try again.');
+          } finally {
+            sendInProgress = false; sendBtn.disabled = false;
+          }
+        }
+
+        sendBtn.addEventListener('click', () => sendMessageFromUI());
+
+        function showError(msg) {
+          const el = appendMessage(msg, 'bot');
+          const inner = el.querySelector('.bubble-inner'); if (inner) inner.style.color = 'var(--danger)';
+        }
+
+        // -----------------------------
+        // Wire topics with event delegation (single handler, no duplicates)
+        // -----------------------------
+        accordionRoot.addEventListener('click', (ev) => {
+          const t = ev.target.closest('.topic');
+          if (!t) return;
+          const answer = t.dataset.answer || t.innerText;
+          // fill input and send
+          userInput.value = t.innerText.trim();
+          // send and do not prevent clearing input
+          sendMessageFromUI(userInput.value);
+        });
+
+        // -----------------------------
+        // Mode switching (tabs) - re-render sidebar per mode
+        // -----------------------------
+        document.querySelectorAll('.mode-item').forEach(m => {
+          m.addEventListener('click', () => {
+            document.querySelectorAll('.mode-item').forEach(x => x.classList.remove('active-mode'));
+            m.classList.add('active-mode');
+            const mode = m.dataset.mode || 'support';
+            renderSidebar(mode);
+          });
+        });
+
+        // -----------------------------
+        // Clear chat
+        // -----------------------------
+        document.getElementById('clear-chat').addEventListener('click', () => {
+          messagesEl.innerHTML = '';
+          previewArea.innerHTML = '';
+          if (fileInput) fileInput.value = '';
+          lastRecordedBlob = null;
+          // reset date marker
+          messagesEl.dataset.lastDate = '';
+          appendMessage('Hello! I am SmartAssist AI. How can I help you today?', 'bot');
+          smoothScrollToBottom(true);
+        });
+
+        // Theme toggle (keeps your earlier toggle)
+        document.querySelector('.theme-toggle').addEventListener('click', () => {
+          document.body.classList.toggle('light');
+        });
+
+        // -----------------------------
+        // Initial setup
+        // -----------------------------
+        window.addEventListener('load', () => {
+          // default mode 'support'
+          renderSidebar('support');
+          // initial greeting once
+          setTimeout(() => { appendMessage('Hello! I am SmartAssist AI. How can I help you today?', 'bot'); smoothScrollToBottom(true); ensurePaddingForComposer(); }, 500);
+        });
+
+
+        const openChatBtn = document.getElementById('open-chat-btn');
+const closeChatBtn = document.getElementById('close-chat-btn');
+const chatPopup = document.getElementById('chat-popup');
+
+openChatBtn.addEventListener('click', () => {
+  chatPopup.classList.remove('hidden');
+});
+
+closeChatBtn.addEventListener('click', () => {
+  chatPopup.classList.add('hidden');
+});
+
+/* Optional: click outside to close */
+chatPopup.addEventListener('click', (e) => {
+  if (e.target === chatPopup) {
+    chatPopup.classList.add('hidden');
+  }
+});
+
+
+      </script>
+</body>
+
+</html>

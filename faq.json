@@ -1,0 +1,330 @@
+{
+  "change_password": "Go to Account → Change Password to update your password.",
+  "reset_password": "Go to Settings → Account → Reset Password.",
+  "two_factor_issues": "Go to Security → Two-Factor → Reset and follow on-screen steps.",
+  "account_locked": "Your account is locked for security reasons. Contact support to unlock.",
+  "suspicious_activity": "If you noticed unusual activity, please reset password immediately.",
+
+  "update_profile": "Go to Profile → Edit Info to update your information.",
+  "change_email": "Go to Account → Edit Email → Verify new email.",
+  "change_phone": "Go to Account → Edit Phone Number.",
+  "delete_account": "Contact support to permanently delete your account.",
+  "profile_picture": "Go to Profile → Edit → Upload Picture.",
+
+  "track_order": "Go to Orders → Track Order to see your shipment status.",
+  "cancel_order": "Orders can be cancelled within 24 hours of placement.",
+  "delivery_delay": "Your order may be delayed due to logistics issues.",
+  "wrong_item": "If you received the wrong item, open a support ticket immediately.",
+  "missing_item": "If an item is missing, contact support with order details.",
+
+  "refund_policy": "Refunds are processed within 3–5 business days.",
+  "refund_rejected": "Refund may be rejected due to item condition or policy violation.",
+  "return_pickup": "Return pickups are scheduled within 48 hours.",
+  "track_refund": "Refund status is available in Orders → Refunds.",
+  "exchange_item": "Exchanges are available for select items only.",
+
+  "payment_failed": "Please check your card details or try again later.",
+  "double_charge": "If double charged, refund will be auto-processed in 3–5 days.",
+  "update_payment_method": "Go to Payment Settings to update your payment method.",
+  "invoice_request": "Invoices are available in Orders → Invoice.",
+  "accepted_payment_methods": "We accept Debit/Credit cards, UPI, Wallets, and PayPal.",
+
+  "plan_details": "Visit Account → Subscription for plan details.",
+  "upgrade_plan": "Click Upgrade on your Subscription page.",
+  "cancel_subscription": "Go to Subscription → Cancel Plan.",
+  "auto_renew": "Auto-renew can be disabled in Subscription settings.",
+  "trial_rules": "Trial periods last 7 days unless otherwise stated.",
+
+  "app_crashing": "Restart the app. If problem persists, reinstall.",
+  "app_slow": "Clear app cache and try again.",
+  "notification_issues": "Enable notifications in Settings → Notifications.",
+  "mic_not_working": "Grant microphone access in browser or device settings.",
+  "website_not_loading": "Clear cache or try again on different browser.",
+
+  "reward_points": "Check Rewards → Points.",
+  "redeem_points": "Redeem points during checkout.",
+  "cashback_delay": "Cashback will reflect in 24 hours.",
+  "wallet_transfer": "Wallet balance cannot be transferred to bank.",
+  "points_expired": "Points expire after 12 months.",
+
+  "international_shipping": "Yes, we ship worldwide.",
+  "shipping_time": "Standard shipping takes 3–5 business days.",
+  "customs_fees": "International orders may include customs charges.",
+  "weekend_delivery": "Weekend delivery available in select cities.",
+  "change_shipping_speed": "You can modify shipping speed before dispatch.",
+
+  "api_rate_limit": "Rate limit reached. Try again after cooldown.",
+  "webhook_issue": "Ensure your webhook endpoint returns HTTP 200.",
+  "sandbox_vs_live": "Use sandbox keys for testing and live keys for production.",
+  "api_key_generation": "Generate keys under Developer → API Keys.",
+  "kyc_rejected": "KYC may be rejected due to unclear documents or mismatch.",
+  
+   "blood_test_fasting_time":"For fasting blood tests, it is recommended to visit the lab in the morning after fasting for 8 to 12 hours. Plain water is allowed unless advised otherwise.",
+  "water_during_fasting": "Yes, you can drink plain water during fasting unless your doctor advises otherwise.",
+  "coffee_before_blood_test": "Coffee, tea, milk, and sugary drinks should be avoided during fasting as they may affect test results.",
+  "medicine_before_blood_test": "You should continue regular medicines unless your doctor specifically asks you to stop them before the test.",
+  "smoking_before_blood_test": "Smoking before a blood test is not recommended as it may affect certain results.",
+
+  "blood_test_morning_time": "Fasting blood tests are usually done in the morning to ensure accurate results after overnight fasting.",
+  "blood_test_without_fasting": "Some blood tests do not require fasting. The lab will inform you if fasting is needed for your test.",
+  "water_before_blood_test": "Drinking plain water before a blood test is generally allowed and helps prevent dehydration.",
+  "exercise_before_blood_test": "Heavy exercise should be avoided before a blood test as it may affect test results.",
+
+ 
+  "blood_sample_safety": "Blood sample collection is safe and performed using sterile equipment.",
+  "bruise_after_blood_test": "Mild bruising at the needle site may occur and usually heals on its own.",
+  "weakness_after_blood_test": "Feeling slightly weak after a blood test is common and improves with rest.",
+
+  "blood_report_availability": "Blood test reports are usually ready within 24 hours. You will receive the report once it is generated.",
+
+  "blood_report_download_process": "You can download your blood test report from the app or website once it is ready.",
+  "blood_report_abnormal": "Lab reports may show abnormal values. A doctor can help interpret what they mean.",
+   "cbc_blood_test": "A complete blood count test helps evaluate overall health and detect infections or anemia.",
+  "sugar_fasting_test": "Fasting blood sugar tests measure glucose levels after fasting for accurate results.",
+  "hba1c_blood_test": "HbA1c tests show average blood sugar levels over the past three months and do not require fasting.",
+  "thyroid_blood_test": "Thyroid blood tests measure hormone levels and usually do not require fasting.",
+  "cholesterol_blood_test": "Cholesterol blood tests often require fasting for 9 to 12 hours.",
+
+
+  "dengue_blood_test": "Dengue blood tests help detect dengue infection and are done using a blood sample.",
+  "malaria_blood_test": "Malaria blood tests identify parasites in the blood for early diagnosis.",
+  "crp_blood_test": "CRP blood tests detect inflammation or infection in the body.",
+  "esr_blood_test": "ESR blood tests measure inflammation and are often done with other blood tests.",
+
+  "home_blood_collection": "Home blood sample collection allows tests to be done at your home at a scheduled time.",
+  "home_collection_technician": "A trained technician visits your home with sterile equipment for sample collection.",
+  "home_collection_reschedule": "Home blood sample collection can be rescheduled before the appointment time.",
+  "home_collection_charge": "Home sample collection may include an additional service charge.",
+
+  "blood_test_during_fever": "Blood tests can be done during fever to help identify the cause of illness.",
+  "blood_test_pregnancy_safe": "Blood tests are generally safe during pregnancy when advised by a doctor.",
+  "blood_test_elderly_safe": "Blood tests are safe for elderly patients with proper care.",
+  "blood_test_after_vaccination": "Some blood tests may be affected after vaccination, so timing should be confirmed with a doctor.",
+
+"blood_sample_collection_time":
+"Blood sample collection usually takes about 5 to 10 minutes, including preparation.",
+
+"blood_test_report_delay_reason":
+"Blood test reports may be delayed due to complex testing, quality checks, or high sample volume at the lab.",
+"blood_amount_taken":
+"For blood tests, only a small amount of blood is collected, usually a few milliliters. This is safe and does not affect health.",
+
+
+
+  "lab_opening_time": "Most diagnostic labs open in the early morning, commonly between 6:00 AM and 8:00 AM. Opening hours may vary by branch.",
+
+  "lab_closing_time": "Labs generally close in the evening, usually between 6:00 PM and 9:00 PM depending on location.",
+
+  "appointment_needed_for_test": "Booking an appointment helps reduce waiting time, but many labs also accept walk-in patients.",
+
+  "walk_in_test_available": "Walk-in blood tests are available at most labs without prior appointment.",
+
+  "lab_waiting_duration": "Average waiting time at labs is around 10 to 30 minutes based on crowd and test type.",
+
+  "id_required_for_lab": "Some labs may ask for a valid ID or prescription during patient registration.",
+
+  "prescription_mandatory": "Prescription is required for certain medical tests, while routine tests may not need one.",
+
+  "sample_labeling_process": "Each sample is labeled immediately with patient details to ensure correct identification.",
+
+  "sample_mixup_prevention": "Labs follow strict verification and labeling protocols to prevent sample mix-ups.",
+
+  "lab_test_accuracy_check": "All lab tests are performed using calibrated machines and validated procedures.",
+
+  "blood_collection_pain": "Blood sample collection usually causes minimal pain, similar to a small needle prick.",
+
+  "blood_collection_position": "Blood samples are collected while the patient is seated or lying down comfortably.",
+
+  "blood_collection_multiple_tests": "Multiple blood tests can usually be performed using a single blood sample.",
+
+  "blood_collection_repeat": "A repeat blood sample may be needed if the initial sample is insufficient or compromised.",
+
+  "blood_collection_children": "Special care and gentle techniques are used when collecting blood from children.",
+
+  "blood_collection_elderly": "Extra care is taken during blood collection for elderly patients to ensure comfort and safety.",
+
+  "fear_of_needles": "Trained technicians help calm patients who are afraid of needles during blood collection.",
+
+  "minor_bleeding_after_test": "Minor bleeding after blood collection is normal and usually stops within a few minutes.",
+
+  "bandage_after_blood_test": "A small bandage is applied to protect the needle site after blood collection.",
+
+  "infection_risk_blood_test": "There is no infection risk when blood is collected using sterile, single-use equipment.",
+
+  "alcohol_before_blood_test": "Alcohol should be avoided before blood tests as it may affect test results.",
+
+  "smoking_before_test": "Smoking before a blood test can influence certain lab values and should be avoided.",
+
+  "sleep_before_test": "Getting proper sleep before a blood test helps maintain accurate results.",
+
+  "stress_effect_on_tests": "High stress levels can temporarily alter some blood test readings.",
+
+  "hydration_before_test": "Drinking enough water before a blood test helps veins become more visible.",
+
+  "vitamins_before_test": "Some vitamin supplements may affect lab results, so inform the lab in advance.",
+
+  "herbal_medicine_test_effect": "Herbal medicines can interfere with certain blood test results.",
+
+  "heavy_meal_before_test": "Eating a heavy meal before some blood tests may impact accuracy.",
+
+  "report_ready_notification": "You will usually receive a notification when your blood test report is ready.",
+
+  "report_email_option": "Blood test reports can be sent to your registered email address.",
+
+  "report_language_available": "Most lab reports are provided in English for easy understanding.",
+
+  "normal_range_in_report": "Normal reference ranges are shown next to test values in the report.",
+
+  "report_verification_details": "Lab reports include verification details to confirm authenticity.",
+
+  "doctor_consultation_report": "A doctor can help explain blood test results and their significance.",
+
+  "partial_report_release": "Some test reports may be released in parts if different tests take different times.",
+
+  "online_report_access": "Blood test reports can be accessed online once they are published.",
+
+  "printed_report_copy": "Printed copies of lab reports can be collected from the lab if required.",
+
+  "blood_test_for_fatigue": "Blood tests help identify causes of fatigue such as anemia or vitamin deficiency.",
+
+  "blood_test_for_weight_loss": "Blood tests may help determine reasons for unexplained weight loss.",
+
+  "blood_test_for_infection": "Blood tests are used to detect infections in the body.",
+
+  "blood_test_for_heart_health": "Certain blood tests help assess heart health and risk factors.",
+
+  "blood_test_for_liver": "Liver function blood tests check how well the liver is working.",
+
+  "blood_test_for_kidney": "Kidney blood tests measure how efficiently the kidneys filter waste.",
+
+  "blood_test_for_vitamins": "Vitamin blood tests help identify nutritional deficiencies.",
+
+  "blood_test_for_hormones": "Hormone blood tests evaluate endocrine system balance.",
+
+  "blood_test_for_immunity": "Some blood tests assess immune system strength and response.",
+
+  "blood_test_for_allergy": "Allergy blood tests help identify substances causing allergic reactions.",
+
+  "blood_test_for_thyroid": "Thyroid blood tests help diagnose hormone imbalance issues.",
+
+
+
+
+
+  "blood_test_cost": "Blood test prices vary depending on the type of test. Exact charges can be viewed before booking the test.",
+
+"full_body_checkup_package": "Full body checkup packages are available and include multiple tests at a discounted price.",
+
+"lab_test_insurance_coverage": "Some lab tests may be covered by insurance depending on your policy. Please check with your insurance provider.",
+
+
+
+"test_cancellation_refund": "If a test is cancelled, the refund will be processed as per the lab’s cancellation policy.",
+
+"refund_processing_time": "Refunds are usually processed within a few business days after cancellation.",
+
+"payment_methods_lab": "Lab test payments can be made using cards, UPI, wallets, or other supported payment methods.",
+
+"advance_payment_required": "Some lab tests may require advance payment before sample collection.",
+
+"discounts_on_tests": "Discounts may be available on selected tests or health packages.",
+
+"price_variation_reason": "Test prices may vary based on test complexity, equipment used, and location.",
+
+"menstrual_cycle_blood_test": "Some blood tests may be affected during menstruation. It is best to inform the lab before testing.",
+
+"fasting_mistake_before_test": "If fasting instructions were not followed, the test may need to be rescheduled for accurate results.",
+
+"water_intake_limit": "Only plain water should be consumed before fasting tests unless instructed otherwise.",
+
+"recent_illness_effect": "Recent illness can affect some blood test values. Inform the lab if you were recently unwell.",
+
+"antibiotics_before_test": "Certain antibiotics may influence test results. Always inform the lab about current medications.",
+
+
+"dizziness_after_blood_test": "Some people may feel dizzy after blood collection. Sitting and resting for a few minutes usually helps.",
+
+"fainting_risk_blood_test": "Fainting is rare but can occur. Inform the technician if you have fainted during blood tests before.",
+
+"post_test_food": "You can resume normal eating immediately after a blood test unless advised otherwise.",
+
+"arm_pain_after_test": "Mild arm pain after blood collection is normal and usually resolves within a day.",
+
+"driving_after_blood_test": "Most people can safely drive after a blood test if they feel normal.",
+
+
+
+
+"slightly_abnormal_report": "Slightly abnormal values do not always indicate a serious condition and should be reviewed by a doctor.",
+
+"compare_old_reports": "Doctors often compare current reports with previous ones to assess health trends.",
+
+"lab_reference_range_difference": "Normal ranges may vary slightly between labs due to different testing methods.",
+
+"report_units_confusion": "Lab reports use medical units that may seem complex. A doctor can help explain them clearly.",
+
+"self_diagnosis_warning": "Lab reports should not be used for self-diagnosis without medical guidance.",
+
+
+
+
+"home_collection_availability_area": "Home collection availability depends on your location and service coverage.",
+
+"home_collection_time_slot": "Home sample collection can be scheduled for a preferred time slot.",
+
+"home_collection_hygiene": "Technicians follow strict hygiene and safety protocols during home sample collection.",
+
+"home_collection_identity": "Technicians carry identification for verification during home visits.",
+
+"home_collection_multiple_people": "Samples for multiple family members can be collected in a single home visit.",
+
+
+"repeat_test_requirement": "Repeat testing may be required to confirm abnormal or borderline results.",
+
+"seasonal_effect_on_tests": "Certain test values may vary slightly based on season or hydration levels.",
+
+"pregnancy_false_results": "Pregnancy can influence some blood test results.",
+
+"age_related_test_changes": "Normal test ranges may differ based on age and gender.",
+
+"test_accuracy_percentage": "Lab tests are highly accurate when conducted under proper conditions.",
+
+
+
+"reschedule_test": "Test appointments can usually be rescheduled before sample collection.",
+
+"missed_appointment": "If an appointment is missed, rebooking may be required.",
+
+"bulk_test_booking": "Multiple tests can be booked together in a single order.",
+
+"family_test_booking": "Health tests can be booked for multiple family members at once.",
+
+"test_booking_confirmation": "Booking confirmation details are shared after successful scheduling.",
+
+
+
+"emergency_test_support": "Lab services are not a replacement for emergency medical care.",
+
+"critical_value_alert": "Critical test values may be flagged and require immediate medical attention.",
+
+"lab_vs_hospital_test": "Some specialized tests may require hospital-based facilities.",
+
+"false_positive_test": "False positives can occur and usually require confirmatory testing.",
+
+"false_negative_test": "False negatives are possible if testing is done too early or incorrectly."
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+}
+
