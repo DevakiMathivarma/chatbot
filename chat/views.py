@@ -696,8 +696,6 @@ def send_message(request):
 
 
 def chat_page(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
     return render(request, "chat/chat_page.html")
 
 
