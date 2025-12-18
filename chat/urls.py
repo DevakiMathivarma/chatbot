@@ -8,15 +8,15 @@ app_name = "chat"
 
 urlpatterns = [
     # auth / pages
-    path("", views.login_page, name="login"),
-    path("register/", views.register_page, name="register"),
-    path("chat/", views.chat_page, name="chat"),
+    # path("", views.login_page, name="login"),
+    # path("register/", views.register_page, name="register"),
+    path("", views.chat_page, name="chat"),
 
     # AJAX / API endpoi
     path("send_message/", views.send_message, name="send_message"),
 
     # Auth actions
-    path('logout/', views.logout_view, name='logout'),
+    # path('logout/', views.logout_view, name='logout'),
 ]
 
 # Serve media files during development (only when DEBUG=True)

@@ -666,33 +666,33 @@ def send_message(request):
 # =====================================================
 # AUTH VIEWS (UNCHANGED)
 # =====================================================
-def login_page(request):
-    if request.method == "POST":
-        user = authenticate(
-            request,
-            username=request.POST.get("username"),
-            password=request.POST.get("password")
-        )
-        if user:
-            login(request, user)
-            return redirect("chat")
-        return render(request, "chat/login.html", {"error": "Invalid credentials"})
-    return render(request, "chat/login.html")
+# def login_page(request):
+#     if request.method == "POST":
+#         user = authenticate(
+#             request,
+#             username=request.POST.get("username"),
+#             password=request.POST.get("password")
+#         )
+#         if user:
+#             login(request, user)
+#             return redirect("chat")
+#         return render(request, "chat/login.html", {"error": "Invalid credentials"})
+#     return render(request, "chat/login.html")
 
 
-def register_page(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        confirm = request.POST.get("confirm_password")
+# def register_page(request):
+#     if request.method == "POST":
+#         username = request.POST.get("username")
+#         password = request.POST.get("password")
+#         confirm = request.POST.get("confirm_password")
 
-        if password != confirm:
-            return render(request, "chat/register.html", {"error": "Passwords do not match"})
+#         if password != confirm:
+#             return render(request, "chat/register.html", {"error": "Passwords do not match"})
 
-        User.objects.create_user(username=username, password=password)
-        return redirect("login")
+#         User.objects.create_user(username=username, password=password)
+#         return redirect("login")
 
-    return render(request, "chat/register.html")
+#     return render(request, "chat/register.html")
 
 
 def chat_page(request):
@@ -701,6 +701,6 @@ def chat_page(request):
     return render(request, "chat/chat_page.html")
 
 
-def logout_view(request):
-    logout(request)
-    return redirect("login")
+# def logout_view(request):
+#     logout(request)
+#     return redirect("login")
